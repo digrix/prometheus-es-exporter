@@ -106,6 +106,14 @@ def parse_response(response, metric=None):
         metrics.append((metric + ['hits'], '', {}, total))
         metrics.append((metric + ['took', 'milliseconds'], '', {}, response['took']))
 
+        hits = response['hits'].get('hits', [])
+        if hits:
+            hit = hits[0]
+            if isinstance(hit, dict) and '_source' in hit:
+                source = hit['_source']
+                if 'value' in source:
+                    metrics.append((metric + ['custom', 'value'], '', {}, source['value']))
+
         if 'aggregations' in response.keys():
             for key, value in response['aggregations'].items():
                 metrics.extend(parse_agg(key, value, metric=metric + [key]))

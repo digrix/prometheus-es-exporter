@@ -1013,6 +1013,74 @@ class Test(unittest.TestCase):
         result = convert_result(parse_response(response))
         self.assertEqual(expected, result)
 
+    # send also first custom value found in the response if present
+    def test_custom_value(self):
+        # Query:
+        # {
+        # "query": {
+        #     "bool": {
+        #         "filter": [ {
+        #             "range": { "@timestamp": { "gte": "now-37d/d", "format": "epoch_millis" }}},
+        #             { "query_string": {
+        #                 "query": "cluster-id.keyword:hadoop2 AND fields.task-name.keyword:HKeeper.PlugJobs AND fields.group-name.keyword:cz.seznam.hkeeper.tasks.core.documentstate.handles.Counters$Indexable AND metric-name.keyword:IMAGE_INDEXABLE"
+        #             }} ]
+        #          }},
+        #   "sort": [{ "@timestamp": {"order": "desc"} }],
+        #   "size": 1,
+        #   "_source": {"includes": ["value", "@timestamp"]},
+        #   "aggs": {
+        #     "val_avg": {
+        #       "avg": {"field": "value"}
+        #     }
+        #   }
+        # }
+        response = {
+              "took" : 13,
+              "timed_out" : False,
+              "_shards" : {
+                "total" : 10,
+                "successful" : 10,
+                "skipped" : 0,
+                "failed" : 0
+              },
+              "hits" : {
+                "total" : {
+                  "value" : 195,
+                  "relation" : "eq"
+                },
+                "max_score" : None,
+                "hits" : [
+                  {
+                    "_index" : "robot_metrics-000014",
+                    "_type" : "_doc",
+                    "_id" : "D_tXIoEBzoR5O875ruvN",
+                    "_score" : None,
+                    "_source" : {
+                      "@timestamp" : "2022-06-02T04:51:34.696+0200",
+                      "value" : 990
+                    },
+                    "sort" : [
+                      1654138294696
+                    ]
+                  }
+                ]
+              },
+              "aggregations" : {
+                "val_avg" : {
+                  "value" : 974.4871794871794
+                }
+              }
+        }
+
+        expected = {
+            'custom_value': 990,
+            'hits': 195,
+            'took_milliseconds': 13,
+            'val_avg_value': 974.4871794871794
+        }
+        result = convert_result(parse_response(response))
+        self.assertEqual(expected, result)
+
 
 if __name__ == '__main__':
     unittest.main()
