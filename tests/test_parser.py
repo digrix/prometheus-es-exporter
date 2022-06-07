@@ -1013,6 +1013,143 @@ class Test(unittest.TestCase):
         result = convert_result(parse_response(response))
         self.assertEqual(expected, result)
 
+    def test_buckets_with_top_metrics(self):
+        #   "query": {
+        #     "bool": {
+        #       "filter": [ {
+        #         "range": { "@timestamp": { "gte": "now-37d/d", "format": "epoch_millis" }}},
+        #         { "query_string": {
+        #             "query": "fields.task-name.keyword:HKeeper.PlugJobs AND fields.group-name.keyword:cz.seznam.hkeeper.tasks.core.documentstate.handles.Counters$Indexable AND metric-name.keyword:IMAGE_INDEXABLE"
+        #         }} ]
+        #     }},
+        #   "size": 0,
+        #   "aggs": {
+        #     "by_env": {
+        #       "composite": {
+        #         "sources": [
+        #           { "cluster-id": { "terms": { "field": "cluster-id.keyword" } } }
+        #         ]
+        #       },
+        #       "aggregations": {
+        #         "valavg": {
+        #           "avg": {"field": "value"}
+        #         },
+        #         "last": {
+        #           "top_metrics": {
+        #             "metrics": {"field": "value"},
+        #             "sort": {"@timestamp": "desc"}
+        #           }
+        #         }
+        #       }
+        #     }
+        #   }
+        response = {
+            "took" : 741,
+            "timed_out" : False,
+            "_shards" : {
+                "total" : 10,
+                "successful" : 10,
+                "skipped" : 0,
+                "failed" : 0
+            },
+            "hits" : {
+                "total" : {
+                    "value" : 548,
+                    "relation" : "eq"
+                },
+                "max_score" : None,
+                "hits" : [ ]
+            },
+            "aggregations" : {
+                "by_env" : {
+                    "after_key" : {
+                        "cluster-id" : "vodka"
+                    },
+                    "buckets" : [
+                        {
+                            "key" : {
+                                "cluster-id" : "hadoop2"
+                            },
+                            "doc_count" : 200,
+                            "last" : {
+                                "top" : [
+                                    {
+                                        "sort" : [
+                                            "2022-06-07T02:51:10.354Z"
+                                        ],
+                                        "metrics" : {
+                                            "value" : 983
+                                        }
+                                    }
+                                ]
+                            },
+                            "valavg" : {
+                                "value" : 974.855
+                            }
+                        },
+                        {
+                            "key" : {
+                                "cluster-id" : "rum"
+                            },
+                            "doc_count" : 174,
+                            "last" : {
+                                "top" : [
+                                    {
+                                        "sort" : [
+                                            "2022-06-07T08:43:34.146Z"
+                                        ],
+                                        "metrics" : {
+                                            "value" : 29946701
+                                        }
+                                    }
+                                ]
+                            },
+                            "valavg" : {
+                                "value" : 2.990773636781609E7
+                            }
+                        },
+                        {
+                            "key" : {
+                                "cluster-id" : "vodka"
+                            },
+                            "doc_count" : 174,
+                            "last" : {
+                                "top" : [
+                                    {
+                                        "sort" : [
+                                            "2022-06-06T19:39:03.164Z"
+                                        ],
+                                        "metrics" : {
+                                            "value" : 398317
+                                        }
+                                    }
+                                ]
+                            },
+                            "valavg" : {
+                                "value" : 391840.7068965517
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+
+        expected = {
+            'by_env_doc_count{by_env_cluster_id="hadoop2"}': 200,
+            'by_env_doc_count{by_env_cluster_id="rum"}': 174,
+            'by_env_doc_count{by_env_cluster_id="vodka"}': 174,
+            'by_env_last{by_env_cluster_id="hadoop2"}': 983,
+            'by_env_last{by_env_cluster_id="rum"}': 29946701,
+            'by_env_last{by_env_cluster_id="vodka"}': 398317,
+            'by_env_valavg_value{by_env_cluster_id="hadoop2"}': 974.855,
+            'by_env_valavg_value{by_env_cluster_id="rum"}': 29907736.36781609,
+            'by_env_valavg_value{by_env_cluster_id="vodka"}': 391840.7068965517,
+            'hits': 548,
+            'took_milliseconds': 741
+        }
+        result = convert_result(parse_response(response))
+        self.assertEqual(expected, result)
+
     # send also first custom value found in the response if present
     def test_custom_value(self):
         # Query:
@@ -1080,6 +1217,8 @@ class Test(unittest.TestCase):
         }
         result = convert_result(parse_response(response))
         self.assertEqual(expected, result)
+
+
 
 
 if __name__ == '__main__':

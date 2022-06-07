@@ -80,6 +80,10 @@ def parse_agg(agg_key, agg, metric=None, labels=None):
             # `after_key` is used for paging composite aggregations - don't parse for metrics.
             # https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-composite-aggregation.html#_pagination
             continue
+        elif key == 'top' and isinstance(value, list):
+            # support for top_metrics aggregation
+            if value and 'metrics' in value[0] and 'value' in value[0]['metrics']:
+                result.append((metric, '', labels, value[0]['metrics']['value']))
         elif isinstance(value, dict):
             result.extend(parse_agg(key, value, metric=metric + [key], labels=labels))
         # We only want numbers as metrics.
